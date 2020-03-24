@@ -48,6 +48,7 @@ int main(void)
     double* tableX = new double[Quantity];
     double* tableY = new double[Quantity];
     double* M = new double[Quantity];
+    double* Mp = new double[Quantity];
     
     int A = 6, B = 7, C = 4;
 
@@ -61,18 +62,22 @@ int main(void)
         tableY[i] = S(tableX[i]);
     }
 
-    GenerateData(tableX, tableY,Quantity,"daneS.dat");
-    cout << tableY[0] << endl;
-    cout << tableY[4095] << endl;       
+    GenerateData(tableX, tableY,Quantity,"daneS.dat");        
     
     Complex *CDFT = dft(tableY, Quantity);
 
     for (int i = 0; i < Quantity; i++)
     {
-        cout << CDFT[i] << endl;
+        M[i] = sqrt(pow(CDFT[i].real(),2)+pow(CDFT[i].imag(),2));
     }
 
+    for (int i = 0; i < Quantity; i++)
+    {
+        Mp[i] = 10 * log10(M[i]);
+    }
 
+    GenerateData(tableX, M, Quantity, "daneM.dat");
+    GenerateData(tableX, Mp, Quantity, "daneMp.dat");
 
     delete[] tableX;
     delete[] tableY;
