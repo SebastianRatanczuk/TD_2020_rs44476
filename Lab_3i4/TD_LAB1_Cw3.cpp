@@ -37,6 +37,8 @@ Complex* dft(double*& table, const int& N)
     return dfttable;
 }
 
+//test
+
 int main(void)
 {
     int Tmin = 0;
