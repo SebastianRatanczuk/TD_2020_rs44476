@@ -99,15 +99,9 @@ Complex* dft(double*& table, const int& N)
 
 int main(void)
 {
-    int Tmin = 0;
-    int Tmax = 1;
-    double Tdelta = 1 / pow(2, 14);
-
-
-    //calculate X range
-    int Interval = Tmax - Tmin;
-    //calculate quantity of X instances
-    int Quantity = Interval / Tdelta + 1;
+    int Tmin = 0;    
+    int Quantity = 674;
+    double Tdelta = 1. / 674;    
 
     //cout << Quantity << endl; 
     double* tableX = new double[Quantity];
@@ -116,41 +110,40 @@ int main(void)
     double* Mp = new double[Quantity];
     double* Fk = new double[Quantity];
 
-
+    
     int A = 6, B = 7, C = 4;
     cout << "Preparing done " << Quantity << endl;
+
     for (int i = 0; i < Quantity; i++)
     {
         tableX[i] = Tdelta * i;
-        tableY[i] = S(tableX[i]);
-    }
+        tableY[i] = P(tableX[i],24);
+    }    
+
     cout << "Data done" << endl;
-    GenerateData(tableX, tableY, Quantity, "daneS.dat");
-    cout << "DFT start" << endl;
+    GenerateData(tableX, tableY,Quantity,"daneS.dat");        
+    cout << "DFT start" << endl;    
 
+    Complex *CDFT = dft(tableY, Quantity);
 
-    int Testsize = Quantity;
+    cout << "DFT done" << endl;  
 
-
-    Complex* CDFT = dft(tableY, Testsize);
-
-    cout << "DFT done" << endl;
-
-    for (int i = 0; i < Testsize; i++)
+    for (int i = 0; i < Quantity; i++)
     {
-        M[i] = sqrt(pow(CDFT[i].real(), 2) + pow(CDFT[i].imag(), 2));
-
+        M[i] = sqrt(pow(CDFT[i].real(),2)+pow(CDFT[i].imag(),2));
+       
         Mp[i] = 10 * log10(M[i]);
         if (Mp[i] < 0)
             Mp[i] = 0;
         Fk[i] = (double)i * (1 / Tdelta) / Quantity;
-    }
+    }    
+
     cout << "Data write Start" << endl;
-    GenerateData(tableX, M, Testsize, "daneM.dat");
-    GenerateData(tableX, Mp, Testsize, "daneMp.dat");
-    GenerateData(tableX, Fk, Testsize, "T3.dat");
-    GenerateData(Fk, M, Testsize, "T1.dat");
-    GenerateData(Fk, Mp, Testsize, "T2.dat");
+    GenerateData(tableX, M, Quantity, "daneM.dat");
+    GenerateData(tableX, Mp, Quantity, "daneMp.dat");
+    GenerateData(tableX, Fk, Quantity, "T3.dat");
+    GenerateData(Fk, M, Quantity, "T1.dat");
+    GenerateData(Fk, Mp, Quantity, "T2.dat");
     cout << "Data write Done" << endl;
 
     delete[] tableX;
