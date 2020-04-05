@@ -88,12 +88,22 @@ double P(double t, int N)
     return Sum;
 }
 
-Complex* dft(double*& table, const int& N)
+Complex* dft(double*& table, const int& N,const int& K)
 {
-    Complex* dfttable = new Complex[N];
-    for (int n = 0; n < N; n++)
-        for (int k = 0; k < N; k++)
-            dfttable[k] += polar(table[n], -2 * M_PI * k * n / N);
+    Complex* dfttable = new Complex[K];  
+    Complex i(0.0, 1);
+   
+    Complex Wn = exp(i*2.*M_PI/(double)N);
+
+    for (int k = 0; k < K; k++)
+    {
+        dfttable[k] = 0;        
+        for (int n = 0; n < N; n++)
+        {
+            dfttable[k] += table[n]*pow(Wn,-k*n);
+        }            
+    }
+        
     return dfttable;
 }
 
@@ -101,6 +111,7 @@ int main(void)
 {
     int Tmin = 0;    
     int Quantity = 674;
+    int Harmoniczne = 674;
     double Tdelta = 1. / 674;    
 
     //cout << Quantity << endl; 
@@ -117,25 +128,25 @@ int main(void)
     for (int i = 0; i < Quantity; i++)
     {
         tableX[i] = Tdelta * i;
-        tableY[i] = P(tableX[i],24);
+        tableY[i] = S(tableX[i]);
     }    
 
     cout << "Data done" << endl;
     GenerateData(tableX, tableY,Quantity,"daneS.dat");        
     cout << "DFT start" << endl;    
 
-    Complex *CDFT = dft(tableY, Quantity);
+    Complex *CDFT = dft(tableY, Quantity,Harmoniczne);
 
     cout << "DFT done" << endl;  
 
     for (int i = 0; i < Quantity; i++)
     {
         M[i] = sqrt(pow(CDFT[i].real(),2)+pow(CDFT[i].imag(),2));
-       
+        //M[i] *= 2. / Quantity;    //naprawa wg Mgr. Wernika
         Mp[i] = 10 * log10(M[i]);
         if (Mp[i] < 0)
             Mp[i] = 0;
-        Fk[i] = (double)i * (1 / Tdelta) / Quantity;
+        Fk[i] = (double)i * (1 / Tdelta) / Harmoniczne;
     }    
 
     cout << "Data write Start" << endl;
