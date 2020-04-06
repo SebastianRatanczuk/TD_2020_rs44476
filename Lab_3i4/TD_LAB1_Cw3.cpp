@@ -107,7 +107,7 @@ Complex* dft(double*& table, const int& N,const int& K)
     return dfttable;
 }
 
-double* idft(Complex*& X, int N )
+double* idft(Complex*& X, const int& N )
 {
     double* double_table = new double[N];
     Complex i(0.0, 1);
