@@ -25,7 +25,7 @@ void GenerateData(T* Xtable, T* Ytable, int length, string name)
 
 double S(double t)
 {
-    return  1.0 * sin(2. * M_PI * t * 7. + 4. * M_PI);
+    return  1.0 * sin(2. * M_PI * t * 5. + 4. * M_PI);
 }
 
 double X(double t)
@@ -64,7 +64,7 @@ double V(double t)
             }
             else if (0.22 > t)
             {
-                return (1 - 7 * t) * sin((2 * M_PI + t + 10) / (t + 0.4));
+                return (1 - 7 * t) * sin((2 * M_PI * t * 10) / (t + 0.4));
             }
             else
                 return -1002;
@@ -107,7 +107,7 @@ Complex* dft(double*& table, const int& N,const int& K)
     return dfttable;
 }
 
-double* idft(Complex*& X, const int& N )
+double* idft(Complex*& X, int N )
 {
     double* double_table = new double[N];
     Complex i(0.0, 1);
@@ -122,16 +122,15 @@ double* idft(Complex*& X, const int& N )
         }
         double_table[n] *= 1. / N;
     }
-
     return double_table;
 }
 
 int main(void)
 {
-    int Tmin = 0;    
     int Quantity = 674;
     int Harmoniczne = 674;
-    double Tdelta = 1. / 674;    
+    int idftQuant = 674;
+    double Tdelta = 1. / 674;
 
     //cout << Quantity << endl; 
     double* tableX = new double[Quantity];
@@ -147,38 +146,42 @@ int main(void)
     for (int i = 0; i < Quantity; i++)
     {
         tableX[i] = Tdelta * i;
-        tableY[i] = X(tableX[i]);
+        tableY[i] = V(tableX[i]);
     }    
 
     cout << "Data done" << endl;
     GenerateData(tableX, tableY,Quantity,"daneS.dat");        
     cout << "DFT start" << endl;    
 
-    Complex *Tdft = dft(tableY, Quantity,Harmoniczne);
+    Complex* Tdft = dft(tableY, Quantity, idftQuant);
 
     cout << "DFT done" << endl;  
 
-    for (int i = 0; i < Quantity; i++)
+    
+    for (int i = 0; i < Harmoniczne; i++)
     {
         M[i] = sqrt(pow(Tdft[i].real(),2)+pow(Tdft[i].imag(),2));
         //M[i] *= 2. / Quantity;    //naprawa wg Mgr. Wernika
         Mp[i] = 10 * log10(M[i]);
         if (Mp[i] < 0)
             Mp[i] = 0;
-        Fk[i] = (double)i * (1 / Tdelta) / Harmoniczne;
+        Fk[i] = (double)(i) * (1. / Tdelta) / Quantity;
     }   
 
+    
+    cout << "IDFT start" << endl;
+
+    double* Tidft = idft(Tdft, idftQuant);
+    
+    cout << "IDFT stop" << endl;
+
     cout << "Data write Start" << endl;
-    GenerateData(tableX, M, Quantity, "daneM.dat");
-    GenerateData(tableX, Mp, Quantity, "daneMp.dat");
-    GenerateData(tableX, Fk, Quantity, "T3.dat");
-    GenerateData(Fk, M, Quantity, "T1.dat");
-    GenerateData(Fk, Mp, Quantity, "T2.dat");
+    GenerateData(Fk, M, Harmoniczne, "M.dat");
+    GenerateData(Fk, Mp, Harmoniczne, "Mp.dat");
+    GenerateData(tableX, Tidft, idftQuant, "idft.dat");
     cout << "Data write Done" << endl;
-
-
-    double* Tidft = idft(Tdft, Quantity);
-    GenerateData(tableX, Tidft, Quantity, "idft.dat");
+    
+   
 
     delete[] tableX;
     delete[] tableY;
