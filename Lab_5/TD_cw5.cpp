@@ -8,9 +8,8 @@
 using namespace std;
 typedef complex<double> Complex;
 
-const double kA = 0.5;
-const double kP = 1;
-
+const double kA = 0.8;
+const double kP = 0.9;
 
 template<typename T>
 void GenerateData(T* Xtable, T* Ytable, int length, string name)
@@ -76,58 +75,76 @@ double Fm(double t, int N)
     return Sum;
 }
 
-double Fm(double t)
-{
-    return  1. * sin(2. * M_PI * t * 4. + 0. * M_PI);
-}
-
-double Fn(double t)
-{   
-    return  1. * sin(2. * M_PI * t * 800.*2. + 0. * M_PI);
-}
-
 double M(double t)
 {
-    return  2. * sin(2. * M_PI * Fm(t,2));
+    return  1. * sin(2. * M_PI * Fm(t,2) * t);
 }
 
 double zA(double t)
 {
-    return  (kA * M(t) + 1.) * cos(2. * M_PI * Fn(t));
+    return  (kA * M(t) + 1.) * cos(2. * M_PI * 800. * t);
+    //return  cos(2. * M_PI * 800. * t);
 }
 
 double zP(double t)
 {
-    return  cos(2. * M_PI*Fn(t)+kP*M(t));
+    return  cos(2. * M_PI * 800 * t + kP * M(t));
 }
 
 int main(void)
 {
-    int koniec = 1; //w sec
-    int czestotliwosc = 1000000;
+    double koniec = 1; //w sec
+    int czestotliwosc = 8000;
 
     double Tdelta = 1. / czestotliwosc;
-    int ilosc_pr骲ek = 1 * czestotliwosc;
+    int ilosc_pr贸bek = koniec * czestotliwosc;
 
-    double*  Tablica_Xy = new double[ilosc_pr骲ek];
-    double* Tablica_Za = new double[ilosc_pr骲ek];
-    double* Tablica_Zp = new double[ilosc_pr骲ek];
-    double* Tablica_M = new double[ilosc_pr骲ek];
-    double* Tablica_S = new double[ilosc_pr骲ek];
+    double* Tablica_Xy = new double[ilosc_pr贸bek];
+    double* Tablica_Za = new double[ilosc_pr贸bek];
+    double* Tablica_Zp = new double[ilosc_pr贸bek];    
+    double* M_Za = new double[ilosc_pr贸bek];
+    double* Mp_Za = new double[ilosc_pr贸bek];
+    double* M_Zp = new double[ilosc_pr贸bek];
+    double* Mp_Zp = new double[ilosc_pr贸bek];
+    double* Fk = new double[ilosc_pr贸bek];
 
-    for (int i = 0; i < ilosc_pr骲ek; i++)
+    for (int i = 0; i < ilosc_pr贸bek; i++)
     {
         Tablica_Xy[i] = i * Tdelta;
         Tablica_Za[i] = zA(Tablica_Xy[i]);
-        Tablica_Zp[i] = zP(Tablica_Xy[i]);
-        Tablica_M[i] = M(Tablica_Xy[i]);
-        Tablica_S[i] = Fm(Tablica_Xy[i],2);
+        Tablica_Zp[i] = zP(Tablica_Xy[i]);       
     }
 
-    GenerateData(Tablica_Xy, Tablica_Za, ilosc_pr骲ek,"Za.dat");
-    GenerateData(Tablica_Xy, Tablica_Zp, ilosc_pr骲ek,"Zp.dat");
-    GenerateData(Tablica_Xy, Tablica_M, ilosc_pr骲ek,"M.dat");
-    GenerateData(Tablica_Xy, Tablica_S, ilosc_pr骲ek,"S.dat");
+    GenerateData(Tablica_Xy, Tablica_Za, ilosc_pr贸bek,"Za.dat");
+    GenerateData(Tablica_Xy, Tablica_Zp, ilosc_pr贸bek,"Zp.dat");
+     
+
+    int ilosc_harmo = 8000;
+    Complex* Tdft_Za = dft(Tablica_Za, ilosc_pr贸bek, ilosc_harmo);
+    Complex* Tdft_Zp = dft(Tablica_Zp, ilosc_pr贸bek, ilosc_harmo);
+
+    for (int i = 0; i < ilosc_harmo; i++)
+    {
+        M_Za[i] = sqrt(pow(Tdft_Za[i].real(), 2) + pow(Tdft_Za[i].imag(), 2));
+        M_Zp[i] = sqrt(pow(Tdft_Zp[i].real(), 2) + pow(Tdft_Zp[i].imag(), 2));
+        
+       
+        Mp_Za[i] = 10 * log10(M_Za[i]);
+        if (Mp_Za[i] < 0)
+            Mp_Za[i] = 0;
+        
+        Mp_Zp[i] = 10 * log10(M_Zp[i]);
+        if (Mp_Zp[i] < 0)
+            Mp_Zp[i] = 0;  
+
+        Fk[i] = (double)(i)*czestotliwosc / ilosc_pr贸bek;
+    }
+
+
+    GenerateData(Fk, M_Za, ilosc_harmo, "MZA.dat");
+    GenerateData(Fk, Mp_Za, ilosc_harmo, "MPZA.dat");
+    GenerateData(Fk, M_Zp, ilosc_harmo, "MZP.dat");
+    GenerateData(Fk, Mp_Zp, ilosc_harmo, "MPZP.dat");
 
     return 0;
 }
