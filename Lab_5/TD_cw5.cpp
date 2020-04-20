@@ -8,8 +8,8 @@
 using namespace std;
 typedef complex<double> Complex;
 
-const double kA = 0.8;
-const double kP = 0.9;
+const double kA = 76;
+const double kP = 67;
 
 template<typename T>
 void GenerateData(T* Xtable, T* Ytable, int length, string name)
@@ -63,7 +63,7 @@ double* idft(Complex*& X, const int& N)
     return double_table;
 }
 
-double Fm(double t, int N)
+double M(double t, int N)
 {
     double Sum = 0;
 
@@ -77,12 +77,12 @@ double Fm(double t, int N)
 
 double M(double t)
 {
-    return  1. * sin(2. * M_PI * Fm(t,2) * t);
+    return  1. * sin(2. * M_PI * M(t,2) * t);
 }
 
 double zA(double t)
 {
-    return  (kA * M(t) + 1.) * cos(2. * M_PI * 800. * t);
+    return  (kA * M(t,2) + 1.) * cos(2. * M_PI * 800. * t);
     //return  cos(2. * M_PI * 800. * t);
 }
 
@@ -101,41 +101,55 @@ int main(void)
 
     double* Tablica_Xy = new double[ilosc_próbek];
     double* Tablica_Za = new double[ilosc_próbek];
-    double* Tablica_Zp = new double[ilosc_próbek];    
+    double* Tablica_Zp = new double[ilosc_próbek];
+    double* Tablica_S = new double[ilosc_próbek];
+
     double* M_Za = new double[ilosc_próbek];
     double* Mp_Za = new double[ilosc_próbek];
     double* M_Zp = new double[ilosc_próbek];
     double* Mp_Zp = new double[ilosc_próbek];
+    double* M_S = new double[ilosc_próbek];
+    double* Mp_S = new double[ilosc_próbek];
     double* Fk = new double[ilosc_próbek];
 
     for (int i = 0; i < ilosc_próbek; i++)
     {
         Tablica_Xy[i] = i * Tdelta;
         Tablica_Za[i] = zA(Tablica_Xy[i]);
-        Tablica_Zp[i] = zP(Tablica_Xy[i]);       
+        Tablica_Zp[i] = zP(Tablica_Xy[i]);  
+        Tablica_S[i] = M(Tablica_Xy[i],2);
     }
 
     GenerateData(Tablica_Xy, Tablica_Za, ilosc_próbek,"Za.dat");
     GenerateData(Tablica_Xy, Tablica_Zp, ilosc_próbek,"Zp.dat");
+    GenerateData(Tablica_Xy, Tablica_S, ilosc_próbek,"S.dat");
      
 
     int ilosc_harmo = 8000;
     Complex* Tdft_Za = dft(Tablica_Za, ilosc_próbek, ilosc_harmo);
     Complex* Tdft_Zp = dft(Tablica_Zp, ilosc_próbek, ilosc_harmo);
+    Complex* Tdft_S = dft(Tablica_Zp, ilosc_próbek, ilosc_harmo);
 
+    int threshhold = 0;
     for (int i = 0; i < ilosc_harmo; i++)
     {
         M_Za[i] = sqrt(pow(Tdft_Za[i].real(), 2) + pow(Tdft_Za[i].imag(), 2));
+        //M_Za[i] *= 2. / ilosc_próbek;    //naprawa wg Mgr. Wernika
         M_Zp[i] = sqrt(pow(Tdft_Zp[i].real(), 2) + pow(Tdft_Zp[i].imag(), 2));
+        M_S[i] = sqrt(pow(Tdft_S[i].real(), 2) + pow(Tdft_S[i].imag(), 2));
         
        
         Mp_Za[i] = 10 * log10(M_Za[i]);
-        if (Mp_Za[i] < 0)
+        if (Mp_Za[i] < threshhold)
             Mp_Za[i] = 0;
         
         Mp_Zp[i] = 10 * log10(M_Zp[i]);
-        if (Mp_Zp[i] < 0)
+        if (Mp_Zp[i] < threshhold)
             Mp_Zp[i] = 0;  
+
+        Mp_S[i] = 10 * log10(M_S[i]);
+        if (Mp_S[i] < threshhold)
+            Mp_S[i] = 0;
 
         Fk[i] = (double)(i)*czestotliwosc / ilosc_próbek;
     }
@@ -145,6 +159,8 @@ int main(void)
     GenerateData(Fk, Mp_Za, ilosc_harmo, "MPZA.dat");
     GenerateData(Fk, M_Zp, ilosc_harmo, "MZP.dat");
     GenerateData(Fk, Mp_Zp, ilosc_harmo, "MPZP.dat");
+    GenerateData(Fk, M_S, ilosc_harmo, "Ms.dat");
+    GenerateData(Fk, Mp_S, ilosc_harmo, "MPs.dat");
 
     return 0;
 }
