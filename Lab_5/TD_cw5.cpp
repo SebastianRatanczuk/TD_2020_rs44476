@@ -8,8 +8,8 @@
 using namespace std;
 typedef complex<double> Complex;
 
-const double kA = 76;
-const double kP = 67;
+const double kA = 0.4;
+const double kP = 0.9;
 
 template<typename T>
 void GenerateData(T* Xtable, T* Ytable, int length, string name)
@@ -134,7 +134,7 @@ int main(void)
     for (int i = 0; i < ilosc_harmo; i++)
     {
         M_Za[i] = sqrt(pow(Tdft_Za[i].real(), 2) + pow(Tdft_Za[i].imag(), 2));
-        //M_Za[i] *= 2. / ilosc_próbek;    //naprawa wg Mgr. Wernika
+        M_Za[i] *= 2. / ilosc_próbek;    //naprawa wg Mgr. Wernika
         M_Zp[i] = sqrt(pow(Tdft_Zp[i].real(), 2) + pow(Tdft_Zp[i].imag(), 2));
         M_S[i] = sqrt(pow(Tdft_S[i].real(), 2) + pow(Tdft_S[i].imag(), 2));
         
@@ -154,12 +154,15 @@ int main(void)
         Fk[i] = (double)(i)*czestotliwosc / ilosc_próbek;
     }
 
+
     GenerateData(Fk, M_Za, ilosc_harmo, "MZA.dat");
     GenerateData(Fk, Mp_Za, ilosc_harmo, "MPZA.dat");
     GenerateData(Fk, M_Zp, ilosc_harmo, "MZP.dat");
     GenerateData(Fk, Mp_Zp, ilosc_harmo, "MPZP.dat");
     GenerateData(Fk, M_S, ilosc_harmo, "Ms.dat");
     GenerateData(Fk, Mp_S, ilosc_harmo, "MPs.dat");
+
+
 
 
     double MaxZa = 0, MaxZp = 0;
@@ -179,13 +182,13 @@ int main(void)
         if (Mp_Za[i] >= MaxZa) break;
     }
     MinID_Za = i;
-    
+
     for (i = ilosc_harmo / 2; i >= 0; i--)
     {
         if (Mp_Za[i] >= MaxZa) break;
     }
     MaxID_Za = i;
-    
+
     for (i = 0; i < ilosc_harmo / 2; i++)
     {
         if (Mp_Zp[i] >= MaxZp) break;
@@ -197,7 +200,7 @@ int main(void)
         if (Mp_Zp[i] >= MaxZp) break;
     }
     MaxID_Zp = i;
-    
+
     cout << "Pasmo Za: " << Fk[MaxID_Za + 1] - Fk[MinID_Za] << " Hz" << endl;
     cout << "Pasmo Zp: " << Fk[MaxID_Zp + 1] - Fk[MinID_Zp] << " Hz" << endl;
 
