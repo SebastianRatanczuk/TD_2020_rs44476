@@ -128,7 +128,7 @@ int main(void)
     int ilosc_harmo = 8000;
     Complex* Tdft_Za = dft(Tablica_Za, ilosc_próbek, ilosc_harmo);
     Complex* Tdft_Zp = dft(Tablica_Zp, ilosc_próbek, ilosc_harmo);
-    Complex* Tdft_S = dft(Tablica_Zp, ilosc_próbek, ilosc_harmo);
+    Complex* Tdft_S = dft(Tablica_S, ilosc_próbek, ilosc_harmo);
 
     int threshhold = 0;
     for (int i = 0; i < ilosc_harmo; i++)
@@ -154,7 +154,6 @@ int main(void)
         Fk[i] = (double)(i)*czestotliwosc / ilosc_próbek;
     }
 
-
     GenerateData(Fk, M_Za, ilosc_harmo, "MZA.dat");
     GenerateData(Fk, Mp_Za, ilosc_harmo, "MPZA.dat");
     GenerateData(Fk, M_Zp, ilosc_harmo, "MZP.dat");
@@ -162,5 +161,54 @@ int main(void)
     GenerateData(Fk, M_S, ilosc_harmo, "Ms.dat");
     GenerateData(Fk, Mp_S, ilosc_harmo, "MPs.dat");
 
+
+    double MaxZa = 0, MaxZp = 0;
+    int MinID_Za = 0, MaxID_Za = 0, MinID_Zp = 0, MaxID_Zp = 0;
+    for (int i = 0; i < ilosc_harmo / 2; i++)
+    {
+        if (MaxZa < Mp_Za[i]) MaxZa = Mp_Za[i];
+        if (MaxZp < Mp_Zp[i]) MaxZp = Mp_Zp[i];
+    }
+
+    MaxZa -= 3;
+    MaxZp -= 3;
+
+    int i;
+    for (i = 0; i < ilosc_harmo / 2; i++)
+    {
+        if (Mp_Za[i] >= MaxZa) break;
+    }
+    MinID_Za = i;
+    
+    for (i = ilosc_harmo / 2; i >= 0; i--)
+    {
+        if (Mp_Za[i] >= MaxZa) break;
+    }
+    MaxID_Za = i;
+    
+    for (i = 0; i < ilosc_harmo / 2; i++)
+    {
+        if (Mp_Zp[i] >= MaxZp) break;
+    }
+    MinID_Zp = i;
+
+    for (i = ilosc_harmo / 2; i >= 0; i--)
+    {
+        if (Mp_Zp[i] >= MaxZp) break;
+    }
+    MaxID_Zp = i;
+    
+    cout << "Pasmo Za: " << Fk[MaxID_Za + 1] - Fk[MinID_Za] << " Hz" << endl;
+    cout << "Pasmo Zp: " << Fk[MaxID_Zp + 1] - Fk[MinID_Zp] << " Hz" << endl;
+
+    //a)
+    //Pasmo Za 1hz
+    //Pasmo Zp 1hz
+    //b)
+    //Pasmo Za 7hz
+    //Pasmo Zp 24hz
+    //c)
+    //Pasmo Za 7hz
+    //Pasmo Zp 193hz
     return 0;
 }
