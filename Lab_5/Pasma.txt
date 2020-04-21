@@ -1,0 +1,9 @@
+//a)
+//Pasmo Za 1hz
+//Pasmo Zp 1hz
+//b)
+//Pasmo Za 7hz
+//Pasmo Zp 24hz
+//c)
+//Pasmo Za 7hz
+//Pasmo Zp 193hz
