@@ -1,0 +1,3 @@
+Pasmo zA 0.25
+Pasmo zF 900.25
+Pasmo zP 10.75
