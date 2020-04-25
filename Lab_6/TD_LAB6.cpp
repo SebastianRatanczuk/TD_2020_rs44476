@@ -29,7 +29,6 @@ struct Data
     double* y;
 };
 
-
 void GenerateData(Data data, string name)
 {
     ofstream outfile;
@@ -155,7 +154,7 @@ double ASK(double x, double y)
 
 double FSK(double x, double y)
 {
-    int A = 2;
+    int A = 3;
     int f1 = (N_ * 10) / Td_;
     int f2 = (N_) / Td_;
     if (y == 1)
@@ -168,7 +167,7 @@ double FSK(double x, double y)
 
 double PSK(double x, double y)
 {
-    int A = 2;
+    int A = 3;
     int f = N_ / Td_;
     if (y == 1)
         return  A * sin(2. * M_PI * f * x);
@@ -188,9 +187,7 @@ double band(double* array, int len, double* Fk)
         if (MaxZa < array[i]) MaxZa = array[i];
     }
 
-    //cout << MaxZa << endl;
-    MaxZa -= 3;
-    //cout << MaxZa << endl;
+    MaxZa -= 3;    
 
     int i;
 
@@ -198,17 +195,13 @@ double band(double* array, int len, double* Fk)
     {
         if (array[i] >= MaxZa) break;
     }
-    MinID_Za = i;
-
-    //cout << Fk[MinID_Za] << endl;
+    MinID_Za = i;    
 
     for (i = len / 2; i >= 0; i--)
     {
         if (array[i] >= MaxZa) break;
     }
-    MaxID_Za = i;
-
-    //cout << Fk[MaxID_Za + 1] << endl;
+    MaxID_Za = i;    
 
     return Fk[MaxID_Za + 1] - Fk[MinID_Za];
 }
@@ -227,7 +220,6 @@ DWORD WINAPI thread(LPVOID data)
     double* tab = dane->table_Y;
     const int N = dane->array_length;
 
-
     Complex* dtf = new Complex[N];
     for (int n = 0; n < N; n++) {
         for (int k = 0; k < N; k++) {
@@ -236,24 +228,22 @@ DWORD WINAPI thread(LPVOID data)
         }
     }
 
-    dane->retrived_data = dtf;
-
-    //cout << "Watek nr " << GetCurrentThreadId() << " Zakonczyl dft" << endl;
+    dane->retrived_data = dtf;    
 
     return 0;
 }
 
 int main(void)
 {
-
     string test = "Tajne";
     string bites = convert(test, false);
     int dlogoscnapisu = test.length();
 
     Td_ = 0.1;
-
     int freq = 8000;
+
     Data data = generateSignal(bites, freq);
+
     double* x = data.x;
     double* y = data.y;
     int len = data.length;
@@ -326,9 +316,9 @@ int main(void)
     double time = (t2 - t1) / (double)CLOCKS_PER_SEC;
     cout << "Czas trwania dft " << time << endl;
 
-    Complex* Threead_DFT_zA = tables[0].retrived_data;
-    Complex* Threead_DFT_zF = tables[1].retrived_data;
-    Complex* Threead_DFT_zP = tables[2].retrived_data;    
+    Complex* Thread_DFT_zA = tables[0].retrived_data;
+    Complex* Thread_DFT_zF = tables[1].retrived_data;
+    Complex* Thread_DFT_zP = tables[2].retrived_data;    
 
 
     double* M_zA1 = new double[len];
@@ -344,9 +334,9 @@ int main(void)
     int threshhold = 0;
     for (int i = 0; i < len; i++)
     {
-        M_zA1[i] = sqrt(pow(Threead_DFT_zA[i].real(), 2) + pow(Threead_DFT_zA[i].imag(), 2));
-        M_zF1[i] = sqrt(pow(Threead_DFT_zF[i].real(), 2) + pow(Threead_DFT_zF[i].imag(), 2));
-        M_zP1[i] = sqrt(pow(Threead_DFT_zP[i].real(), 2) + pow(Threead_DFT_zP[i].imag(), 2));
+        M_zA1[i] = sqrt(pow(Thread_DFT_zA[i].real(), 2) + pow(Thread_DFT_zA[i].imag(), 2));
+        M_zF1[i] = sqrt(pow(Thread_DFT_zF[i].real(), 2) + pow(Thread_DFT_zF[i].imag(), 2));
+        M_zP1[i] = sqrt(pow(Thread_DFT_zP[i].real(), 2) + pow(Thread_DFT_zP[i].imag(), 2));
 
         Mp_zA1[i] = 10 * log10(M_zA1[i]);
         Mp_zF1[i] = 10 * log10(M_zF1[i]);
@@ -364,9 +354,9 @@ int main(void)
         Fk[i] = (double)(i)*freq / len;
     }
 
-    GenerateData(Fk, Mp_zA1, len, "Dft_ZA1");
-    GenerateData(Fk, Mp_zF1, len, "Dft_ZF1");
-    GenerateData(Fk, Mp_zP1, len, "Dft_ZP1");
+    GenerateData(Fk, Mp_zA1, len, "Dft_ZA");
+    GenerateData(Fk, Mp_zF1, len, "Dft_ZF");
+    GenerateData(Fk, Mp_zP1, len, "Dft_ZP");
 
     double szerokosc_zA = band(Mp_zA1, len, Fk);
     double szerokosc_zF = band(Mp_zF1, len, Fk);
