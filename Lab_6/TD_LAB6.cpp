@@ -1,5 +1,12 @@
+//SO IS1 210B LAB06
+//sebastian ratanczuk
+//sebastian-ratanczuk@zut.edu.pl
+
 #define _USE_MATH_DEFINES
 
+
+#include <windows.h>
+#include <errno.h>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -70,7 +77,7 @@ Complex* dft(double* tab, const int N) {
 void reverseStr(string& str)
 {
     int n = str.length();
-    
+
     for (int i = 0; i < n / 2; i++)
         swap(str[i], str[n - i - 1]);
 }
@@ -80,7 +87,7 @@ string convert(char data, bool reverse = false)
     Bite bite = (Bite)(int)data;
     string reverseorder = bite.to_string();
     if (reverse)
-    {   
+    {
         reverseStr(reverseorder);
         return reverseorder;
     }
@@ -100,20 +107,20 @@ string convert(string data, bool reverse = false)
 }
 
 Data generateSignal(string bite, int Sample_freq)
-{    
+{
     int bite_length = Td_ * Sample_freq;
-    
+
     int word_length = bite_length * bite.length();
-   
+
 
     double* x = new double[word_length];
     double* signal = new double[word_length];
-    
+
 
     int currentpos = 0;
     for (int i = 0; i < bite.length(); i++)
     {
-        int bit = bite[i]-'0';
+        int bit = bite[i] - '0';
 
         for (currentpos; currentpos < (i + 1) * bite_length; currentpos++)
         {
@@ -122,7 +129,7 @@ Data generateSignal(string bite, int Sample_freq)
 
             if (currentpos > word_length)
             {
-                cout << "ERROR 1";                
+                cout << "ERROR 1";
             }
         }
     }
@@ -146,12 +153,12 @@ double ASK(double x, double y)
     else if (y == 0)
         return  A2 * sin(2. * M_PI * f * x);
     else
-        return  -101;    
+        return  -101;
 }
 
 double FSK(double x, double y)
 {
-    int A = 2;    
+    int A = 2;
     int f1 = (N_ * 10) / Td_;
     int f2 = (N_) / Td_;
     if (y == 1)
@@ -203,26 +210,56 @@ double band(double* array, int len, double* Fk)
         if (array[i] >= MaxZa) break;
     }
     MaxID_Za = i;
-    
+
     //cout << Fk[MaxID_Za + 1] << endl;
 
     return Fk[MaxID_Za + 1] - Fk[MinID_Za];
 }
 
+struct Double_tabe {
+
+    double* table_Y;
+    int array_length;
+    Complex* retrived_data;
+};
+
+DWORD WINAPI thread(LPVOID data)
+{
+    Double_tabe* dane = (Double_tabe*)data;
+
+    double* tab = dane->table_Y;
+    const int N = dane->array_length;
+    
+
+    Complex* dtf = new Complex[N];
+    for (int n = 0; n < N; n++) {
+        for (int k = 0; k < N; k++) {
+            double m = -2 * M_PI * k * n / N;
+            dtf[k] += polar(tab[n], m);
+        }
+    }
+    
+    dane->retrived_data = dtf;
+   
+    cout << "Watek nr " << GetCurrentThreadId() << " Zakonczyl dft" << endl;
+
+    return 0;
+}
+
 int main(void)
-{   
+{
 
     string test = "Tajne";
     string bites = convert(test, false);
     int dlogoscnapisu = test.length();
 
     Td_ = 0.1;
-    
+
     int freq = 8000;
     Data data = generateSignal(bites, freq);
     double* x = data.x;
     double* y = data.y;
-    int len = data.length;    
+    int len = data.length;
 
     double* zA = new double[len];
     double* zF = new double[len];
@@ -257,71 +294,96 @@ int main(void)
     GenerateData(x, zP, len, "ZP");
 
 
-    cout << "DFT START" << endl;
+    HANDLE* threads = new HANDLE[3];
+    DWORD* thrdids = new DWORD[3];
+    Double_tabe* tables = new Double_tabe[3];
+    
 
-    Complex* DFT_zA = dft(zA, len);
+    tables[0].table_Y = zA;
+    tables[0].array_length = len;
+    tables[0].retrived_data = NULL;
 
-    cout << "ZA done" << endl;
+    tables[1].table_Y = zF;
+    tables[1].array_length = len;
+    tables[1].retrived_data = NULL;
 
-    Complex* DFT_zF = dft(zF, len);
+    tables[2].table_Y = zP;
+    tables[2].array_length = len;
+    tables[2].retrived_data = NULL;
 
-    cout << "ZF done" << endl;
+    clock_t t1 = clock();
+    for (int i = 0; i < 3; i++)
+    {
+        threads[i] = CreateThread(NULL, 0, thread, &tables[i], 0, &thrdids[i]);
+        if (threads[i] == NULL)
+        {
+            printf("ERROR");
+        }
+    }
 
-    Complex* DFT_zP = dft(zP, len);
+    for (int i = 0; i < 3; i++)
+    {
+        long retval;
+        WaitForSingleObject(threads[i], INFINITE);
+        CloseHandle(threads[i]);
+    }
 
-    cout << "ZP done" << endl;
+    clock_t t2 = clock();
+    double time = (t2 - t1) / (double)CLOCKS_PER_SEC;
 
+    Complex* Threead_DFT_zA = tables[0].retrived_data;
+    Complex* Threead_DFT_zF = tables[1].retrived_data;
+    Complex* Threead_DFT_zP = tables[2].retrived_data;   
 
-    double* M_zA = new double[len];
-    double* M_zF = new double[len];
-    double* M_zP = new double[len];
+    cout << time << endl;
+  
 
-    double* Mp_zA = new double[len];
-    double* Mp_zF = new double[len];
-    double* Mp_zP = new double[len];
+    double* M_zA1 = new double[len];
+    double* M_zF1 = new double[len];
+    double* M_zP1 = new double[len];
+
+    double* Mp_zA1 = new double[len];
+    double* Mp_zF1 = new double[len];
+    double* Mp_zP1 = new double[len];
 
     double* Fk = new double[len];
 
     int threshhold = 0;
     for (int i = 0; i < len; i++)
     {
-        M_zA[i] = sqrt(pow(DFT_zA[i].real(), 2) + pow(DFT_zA[i].imag(), 2));
-        M_zF[i] = sqrt(pow(DFT_zF[i].real(), 2) + pow(DFT_zF[i].imag(), 2));
-        M_zP[i] = sqrt(pow(DFT_zP[i].real(), 2) + pow(DFT_zP[i].imag(), 2));    
-        
+        M_zA1[i] = sqrt(pow(Threead_DFT_zA[i].real(), 2) + pow(Threead_DFT_zA[i].imag(), 2));
+        M_zF1[i] = sqrt(pow(Threead_DFT_zF[i].real(), 2) + pow(Threead_DFT_zF[i].imag(), 2));
+        M_zP1[i] = sqrt(pow(Threead_DFT_zP[i].real(), 2) + pow(Threead_DFT_zP[i].imag(), 2));       
 
-        Mp_zA[i] = 10 * log10(M_zA[i]);
-        if (Mp_zA[i] < threshhold)
-            Mp_zA[i] = 0;
+        Mp_zA1[i] = 10 * log10(M_zA1[i]);
+        if (Mp_zA1[i] < threshhold)
+            Mp_zA1[i] = 0;
 
-        Mp_zF[i] = 10 * log10(M_zF[i]);
-        if (Mp_zF[i] < threshhold)
-            Mp_zF[i] = 0;
+        Mp_zF1[i] = 10 * log10(M_zF1[i]);
+        if (Mp_zF1[i] < threshhold)
+            Mp_zF1[i] = 0;
 
-        Mp_zP[i] = 10 * log10(M_zP[i]);
-        if (Mp_zP[i] < threshhold)
-            Mp_zP[i] = 0;
-
-
+        Mp_zP1[i] = 10 * log10(M_zP1[i]);
+        if (Mp_zP1[i] < threshhold)
+            Mp_zP1[i] = 0;
 
         Fk[i] = (double)(i)*freq / len;
-    }   
+    }    
 
-    
-    GenerateData(Fk, Mp_zA, len, "Dft_ZA");
-    GenerateData(Fk, Mp_zF, len, "Dft_ZF");
-    GenerateData(Fk, Mp_zP, len, "Dft_ZP");
+    GenerateData(Fk, Mp_zA1, len, "Dft_ZA1");
+    GenerateData(Fk, Mp_zF1, len, "Dft_ZF1");
+    GenerateData(Fk, Mp_zP1, len, "Dft_ZP1");
+    double szerokosc_zA = band(Mp_zA1, len, Fk);
+    double szerokosc_zF = band(Mp_zF1, len, Fk);
+    double szerokosc_zP = band(Mp_zP1, len, Fk);
 
-    
-    double szerokosc_zA = band(Mp_zA, len, Fk);
-    double szerokosc_zF = band(Mp_zF, len, Fk);
-    double szerokosc_zP = band(Mp_zP, len, Fk);
-
-    cout << szerokosc_zA << endl;
-    cout << szerokosc_zF << endl;
-    cout << szerokosc_zP << endl;
+    cout << "Szerokosc pasma dla zA: " << szerokosc_zA << endl;
+    cout << "Szerokosc pasma dla zF: " << szerokosc_zF << endl;
+    cout << "Szerokosc pasma dla zP: " << szerokosc_zP << endl;
 
     system("gnuplot P.plt");
     system("gnuplot P_10.plt");
     system("gnuplot DFT.plt");
 }
+
+
