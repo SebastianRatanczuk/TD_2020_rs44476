@@ -320,4 +320,8 @@ int main(void)
     cout << szerokosc_zA << endl;
     cout << szerokosc_zF << endl;
     cout << szerokosc_zP << endl;
+
+    system("gnuplot P.plt");
+    system("gnuplot P_10.plt");
+    system("gnuplot DFT.plt");
 }
