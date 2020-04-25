@@ -108,10 +108,8 @@ Data generateSignal(string bite, int Sample_freq)
 
     int word_length = bite_length * bite.length();
 
-
     double* x = new double[word_length];
     double* signal = new double[word_length];
-
 
     int currentpos = 0;
     for (int i = 0; i < bite.length(); i++)
