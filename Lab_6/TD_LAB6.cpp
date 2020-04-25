@@ -4,7 +4,6 @@
 
 #define _USE_MATH_DEFINES
 
-
 #include <windows.h>
 #include <errno.h>
 #include <fstream>
@@ -14,7 +13,6 @@
 #include <math.h>
 #include <time.h>
 #include <bitset>
-
 
 using namespace std;
 
@@ -229,7 +227,7 @@ DWORD WINAPI thread(LPVOID data)
 
     double* tab = dane->table_Y;
     const int N = dane->array_length;
-    
+
 
     Complex* dtf = new Complex[N];
     for (int n = 0; n < N; n++) {
@@ -238,10 +236,10 @@ DWORD WINAPI thread(LPVOID data)
             dtf[k] += polar(tab[n], m);
         }
     }
-    
+
     dane->retrived_data = dtf;
-   
-    cout << "Watek nr " << GetCurrentThreadId() << " Zakonczyl dft" << endl;
+
+    //cout << "Watek nr " << GetCurrentThreadId() << " Zakonczyl dft" << endl;
 
     return 0;
 }
@@ -297,19 +295,16 @@ int main(void)
     HANDLE* threads = new HANDLE[3];
     DWORD* thrdids = new DWORD[3];
     Double_tabe* tables = new Double_tabe[3];
-    
+
 
     tables[0].table_Y = zA;
-    tables[0].array_length = len;
-    tables[0].retrived_data = NULL;
+    tables[0].array_length = len;   
 
     tables[1].table_Y = zF;
-    tables[1].array_length = len;
-    tables[1].retrived_data = NULL;
+    tables[1].array_length = len;    
 
     tables[2].table_Y = zP;
-    tables[2].array_length = len;
-    tables[2].retrived_data = NULL;
+    tables[2].array_length = len;    
 
     clock_t t1 = clock();
     for (int i = 0; i < 3; i++)
@@ -324,19 +319,18 @@ int main(void)
     for (int i = 0; i < 3; i++)
     {
         long retval;
-        WaitForSingleObject(threads[i], INFINITE);
+        WaitForSingleObject(threads[i], INFINITE);        
         CloseHandle(threads[i]);
     }
 
     clock_t t2 = clock();
     double time = (t2 - t1) / (double)CLOCKS_PER_SEC;
+    cout << "Czas trwania dft " << time << endl;
 
     Complex* Threead_DFT_zA = tables[0].retrived_data;
     Complex* Threead_DFT_zF = tables[1].retrived_data;
-    Complex* Threead_DFT_zP = tables[2].retrived_data;   
+    Complex* Threead_DFT_zP = tables[2].retrived_data;    
 
-    cout << time << endl;
-  
 
     double* M_zA1 = new double[len];
     double* M_zF1 = new double[len];
@@ -353,26 +347,28 @@ int main(void)
     {
         M_zA1[i] = sqrt(pow(Threead_DFT_zA[i].real(), 2) + pow(Threead_DFT_zA[i].imag(), 2));
         M_zF1[i] = sqrt(pow(Threead_DFT_zF[i].real(), 2) + pow(Threead_DFT_zF[i].imag(), 2));
-        M_zP1[i] = sqrt(pow(Threead_DFT_zP[i].real(), 2) + pow(Threead_DFT_zP[i].imag(), 2));       
+        M_zP1[i] = sqrt(pow(Threead_DFT_zP[i].real(), 2) + pow(Threead_DFT_zP[i].imag(), 2));
 
         Mp_zA1[i] = 10 * log10(M_zA1[i]);
+        Mp_zF1[i] = 10 * log10(M_zF1[i]);
+        Mp_zP1[i] = 10 * log10(M_zP1[i]);
+
         if (Mp_zA1[i] < threshhold)
             Mp_zA1[i] = 0;
-
-        Mp_zF1[i] = 10 * log10(M_zF1[i]);
+        
         if (Mp_zF1[i] < threshhold)
             Mp_zF1[i] = 0;
-
-        Mp_zP1[i] = 10 * log10(M_zP1[i]);
+        
         if (Mp_zP1[i] < threshhold)
             Mp_zP1[i] = 0;
 
         Fk[i] = (double)(i)*freq / len;
-    }    
+    }
 
     GenerateData(Fk, Mp_zA1, len, "Dft_ZA1");
     GenerateData(Fk, Mp_zF1, len, "Dft_ZF1");
     GenerateData(Fk, Mp_zP1, len, "Dft_ZP1");
+
     double szerokosc_zA = band(Mp_zA1, len, Fk);
     double szerokosc_zF = band(Mp_zF1, len, Fk);
     double szerokosc_zP = band(Mp_zP1, len, Fk);
@@ -385,5 +381,3 @@ int main(void)
     system("gnuplot P_10.plt");
     system("gnuplot DFT.plt");
 }
-
-
