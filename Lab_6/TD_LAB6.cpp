@@ -1,4 +1,3 @@
-//SO IS1 210B LAB06
 //sebastian ratanczuk
 //sebastian-ratanczuk@zut.edu.pl
 
