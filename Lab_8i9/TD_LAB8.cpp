@@ -15,9 +15,6 @@
 
 using namespace std;
 
-typedef complex<double> Complex;
-typedef bitset<8> Bite;
-
 template<typename T>
 void GenerateData(T* Xtable, T* Ytable, int length, string name)
 {
@@ -33,88 +30,125 @@ void GenerateData(T* Xtable, T* Ytable, int length, string name)
     outfile.close();
 }
 
-void reverseStr(string& str)
-{
-    int n = str.length();
-
-    for (int i = 0; i < n / 2; i++)
-        swap(str[i], str[n - i - 1]);
-}
-
-string convert(char data, bool reverse = false)
-{
-    Bite bite = (Bite)(int)data;
-    string reverseorder = bite.to_string();
-    if (reverse)
-    {
-        reverseStr(reverseorder);
-        return reverseorder;
-    }
-    return bite.to_string();
-}
-
-string convert(string data, bool reverse = false)
-{
-    string to_ret = "";
-
-    for (int i = 0; i < data.length(); i++)
-    {
-        to_ret += convert(data[i], reverse);
-    }
-
-    return to_ret;
-}
-
 int main()
 {
+    int Freq = 1000;
+    double TDCLK = 0.05;
+    int CLK_AM = 33;
+    int CLK_LEN = CLK_AM * TDCLK * Freq;
+    int Bit_len = TDCLK * Freq;
+    double* X = new double[CLK_LEN];
 
-    string test = "DU";
-    string bites = convert(test, false);
-    string werbit = "1010110010001100";
-    //bites = werbit;
-    int* x = new int[34];
-    int* clock = new int[34];
-    int* ttl = new int[34];
-    int* man = new int[34];
-    int* nr = new int[34];
+    double* CLK = new double[CLK_LEN];
+    double* TTL = new double[CLK_LEN];
+    double* MANC = new double[CLK_LEN];
+    double* NRZI = new double[CLK_LEN];
+    double* BAMI = new double[CLK_LEN];
 
-    for (int i = 0; i < 34; i++)
+    int flag = 1;
+
+    //clk
+
+    for (int i = 0; i < CLK_AM; i++)
     {
-        x[i] = i;
-        clock[i] = (i+1) % 2;    
-        ttl[i] = 0;
-        man[i] = 0;
-        nr[i] = 0;
+        for (int j = i * Bit_len; j < (i + 1) * Bit_len; j++)
+        {
+            CLK[j] = flag;
+            X[j] = (double)j / Freq;
+        }
+        flag = !flag;
     }
 
-    for (int i = 0; i < 16; i++)
+    GenerateData(X, CLK, CLK_LEN, "CLK");
+
+    string bit = "1010110010001100";
+
+
+    //ttl
+    flag = 0;
+    int a = 0;
+    for (int i = 1; i < CLK_LEN; i++)
     {
-        ttl[2*i] = bites[i]-'0';
-        ttl[2*i + 1] = bites[i] - '0';
+        if (CLK[i - 1] < CLK[i])
+        {
+            if (a < bit.length())
+                flag = bit[a++] - '0';
+            else
+                flag = 0;
+        }
+        TTL[i] = flag;
     }
 
-    for (int i = 0; i < 16; i++)
+    GenerateData(X, TTL, CLK_LEN, "TTL");
+
+    //manchaster
+    flag = 0;
+    for (int i = 1; i < CLK_LEN; i++)
     {
-        if (bites[i] - '0' == 0)
-        {
-            man[2 * i] = 1;
-            man[2 * i + 1] = -1;
+        if (CLK[i - 1] < CLK[i])//rosnacy
+        {            
+            if (TTL[i - 1] == TTL[i])
+            {
+                if (TTL[i] == 1)
+                    flag = -1;
+                else
+                    flag = 1;
+            }
         }
-        else if (bites[i] - '0' == 1)
+
+        if (CLK[i - 1] > CLK[i])//malejacy
         {
-            man[2 * i] = -1;
-            man[2 * i + 1] = 1;
+            if (TTL[i] == 1)
+                flag = 1;
+            else
+                flag = -1;
         }
-        else
-        {
-            man[2 * i] = -2;
-            man[2 * i + 1] = -2;
-        }
+
+        MANC[i] = flag;
     }
 
-    GenerateData(x, clock, 34, "Clk");
-    GenerateData(x, ttl, 34, "Ttl");
-    GenerateData(x, man, 34, "Man");
-    
-    cout << bites << endl;
+    GenerateData(X, MANC, CLK_LEN, "Manchester");
+
+    //nrzi
+    flag = 0;
+    for (int i = 1; i < CLK_LEN; i++)
+    {
+        if (CLK[i - 1] > CLK[i])//malejacy
+        {
+            if (TTL[i] == 1)
+            {
+                if (flag == 0)
+                    flag = 1;
+                else
+                    flag = flag * -1;
+            }
+                
+        }
+
+        NRZI[i] = flag;
+    }
+
+    GenerateData(X, NRZI, CLK_LEN, "NRZI");
+
+    //bami
+
+    flag = 0;
+    int f1 = 1;
+    for (int i = 1; i < CLK_LEN; i++)
+    {
+        if (CLK[i - 1] < CLK[i])//rosnacy
+        {
+            if (TTL[i] == 1)
+            {
+                flag = f1;
+                f1 = f1 * -1; ;
+            }
+            else
+                flag = 0;
+        }
+        BAMI[i] = flag;
+    }
+
+    GenerateData(X, BAMI, CLK_LEN, "BAMI");
+
 }
