@@ -34,7 +34,7 @@ int main()
 {
     int Freq = 1000;
     double TDCLK = 0.05;
-    int CLK_AM = 33;
+    int CLK_AM = 34;
     int CLK_LEN = CLK_AM * TDCLK * Freq;
     int Bit_len = TDCLK * Freq;
     double* X = new double[CLK_LEN];
@@ -136,7 +136,7 @@ int main()
     int f1 = 1;
     for (int i = 1; i < CLK_LEN; i++)
     {
-        if (CLK[i - 1] < CLK[i])//rosnacy
+        if (CLK[i - 1] < CLK[i]) //rosnacy
         {
             if (TTL[i] == 1)
             {
@@ -150,5 +150,106 @@ int main()
     }
 
     GenerateData(X, BAMI, CLK_LEN, "BAMI");
+
+
+    cout <<"Sygnal pierwotny:\t"<< bit << endl;
+
+    //dekodowanie ttl 
+    double* D_TTL = new double[bit.length()];
+    a = 0;
+    for (int i = 1; i < CLK_LEN; i++) 
+    {
+        if (CLK[i - 1] < CLK[i])//rosnacy
+        {
+            D_TTL[a++] = TTL[i];
+        }
+    }
+
+
+    cout << "TTL:\t\t\t";
+    for (int i = 0; i < bit.length(); i++)
+    {
+        cout << D_TTL[i];
+    }
+    cout << endl;
+
+    //dekodowanie manshester 
+    double* D_MAN = new double[bit.length()];
+    a = 0;
+    double* NEW_CLK = new double[CLK_LEN];
+    int offset = Bit_len * 0.25;
+    for (int i = 0; i < CLK_LEN; i++)
+    {
+        NEW_CLK[i] = (i-offset < 0) ? 1 : CLK[i-offset]; 
+    }
+
+    GenerateData(X, NEW_CLK, CLK_LEN, "OFFSET");
+
+    for (int i = Bit_len*2; i < CLK_LEN; i++) 
+    {
+        if (NEW_CLK[i - 1] > NEW_CLK[i])//malejacy
+        {
+            D_MAN[a++] = (MANC[i] < 0) ? 0 : 1;
+            //D_MAN[a++] = MANC[i];
+        }
+    }
+    cout << "Manchester:\t\t";
+
+    for (int i = 0; i < bit.length(); i++)
+    {
+        cout << D_MAN[i];
+    }
+    cout << endl;
+
+    //dekodowanie nrzi
+    double* D_NRZItmp = new double[bit.length()]; 
+    double* D_NRZI = new double[bit.length()]; 
+    a = 0;
+
+    for (int i = 1; i < CLK_LEN; i++)
+    {
+        if (CLK[i - 1] > CLK[i])//male          
+        {
+            D_NRZItmp[a++] = (NRZI[i] < 0) ? 0 : 1;
+        }
+    }
+
+    cout << "NRZI:\t\t\t";
+
+    for (int i = 0; i < bit.length(); i++)
+    {
+        D_NRZI[i] = (int) D_NRZItmp[i] ^ (int)D_NRZItmp[i+1];
+    }
+
+    for (int i = 0; i < bit.length(); i++)
+    {
+        cout << D_NRZI[i];
+    }
+    cout << endl;
+
+
+    //bami
+    double* D_BAMI = new double[bit.length()];
+    a = 0;    
+
+    for (int i = 2; i < CLK_LEN; i++)
+    {
+        if (CLK[i - 1] < CLK[i])         
+        {
+            if (BAMI[i] == 1)
+                D_BAMI[a++] = 1;
+            if (BAMI[i] == -1)
+                D_BAMI[a++] = 1;
+            if (BAMI[i] == 0)
+                D_BAMI[a++] = 0;
+        }
+    }
+
+    cout << "BAMI:\t\t\t";
+    for (int i = 0; i < bit.length(); i++)
+    {
+        cout << abs(D_BAMI[i]);
+    }
+    cout << endl;
 
 }
