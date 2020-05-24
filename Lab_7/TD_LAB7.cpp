@@ -393,6 +393,4 @@ int main(void)
 
     GenerateData(x, P, len, "Calka_zF");
     GenerateData(x, M, len, "Sygnal_zF");
-
-
 }
