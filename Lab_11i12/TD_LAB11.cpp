@@ -7,11 +7,15 @@
 #include <math.h>
 #include <time.h>
 #include <bitset>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
 typedef complex<double> Complex;
 typedef bitset<8> Bite;
+
+
 
 struct HammingData
 {
@@ -23,6 +27,8 @@ struct HammingData
     int PacketsAmmount;
 };
 
+
+//Struk0tura przechowojaca wartosci funkcji
 struct Data
 {
     int length;
@@ -31,6 +37,8 @@ struct Data
     double* y;
 };
 
+
+//Klasa Macierzy
 class Matrix
 {
 public:
@@ -97,6 +105,8 @@ public:
         }
     }
 
+
+    //Wypisuje Macierz na ekran
     void show()
     {
         for (int i = 0; i < x; i++)
@@ -106,7 +116,9 @@ public:
         }
         cout << endl;
     }
+    
 
+    //Mnozenie Macierzowe
     Matrix operator*(Matrix b)
     {
         if (this->y == b.x)
@@ -130,6 +142,8 @@ public:
         else throw("Dimmensions dont match");
     }
 
+
+    //Modulo dla kazdego elementu macierzy 
     void operator%(int t)
     {
         for (int i = 0; i < x; i++)
@@ -137,6 +151,8 @@ public:
                 matrix[i][j] = matrix[i][j] % t;
     }
 
+
+    //Rozwiniecie maciezy do jednowymiarowej tablicy
     int* list()
     {
         int* to_ret = new int[x * y];
@@ -147,6 +163,8 @@ public:
         return to_ret;
     }
 
+
+    //Rozszezenie tablicy bez wpisywania danych
     void append(int dane)
     {
         this->x++;
@@ -154,6 +172,8 @@ public:
     }
 };
 
+
+//Wypisanie danych do pliku
 void GenerateData(Data data, string name)
 {
     ofstream outfile;
@@ -168,6 +188,8 @@ void GenerateData(Data data, string name)
     outfile.close();
 }
 
+
+//Wypisanie danych do pliku
 template<typename T>
 void GenerateData(T* Xtable, T* Ytable, int length, string name)
 {
@@ -183,11 +205,15 @@ void GenerateData(T* Xtable, T* Ytable, int length, string name)
     outfile.close();
 }
 
+
+//Negacja wskazanego bitu
 void NEG(int* data, int number)
 {
     data[number] = !data[number];
 }
 
+
+//Funkcja odwracajaca string
 void reverseStr(string& str)
 {
     int n = str.length();
@@ -196,6 +222,8 @@ void reverseStr(string& str)
         swap(str[i], str[n - i - 1]);
 }
 
+
+//Zmiana string na ascii binarnie 
 string convert(char data, bool reverse = false)
 {
     Bite bite = (Bite)(int)data;
@@ -208,6 +236,8 @@ string convert(char data, bool reverse = false)
     return bite.to_string();
 }
 
+
+//Zmiana Z sys binarnego do dziesietnego
 int Binto10(int* data, int range)
 {
     int to_ret = 0;
@@ -219,6 +249,8 @@ int Binto10(int* data, int range)
     return to_ret;
 }
 
+
+//Zmiana z sys binarnego do dziesietnego
 int Binto10(string data)
 {
     int to_ret = 0;
@@ -229,6 +261,8 @@ int Binto10(string data)
     return to_ret;
 }
 
+
+//Kodowanie hamminga na pojednczym pakiecie
 int* CodeHamming(string Data)
 {
     string gstr = "1101101110000111010000100001";
@@ -242,6 +276,8 @@ int* CodeHamming(string Data)
     return K.list();
 }
 
+
+//Dekodwanie Haminga dla pojedynczego pakietu
 int* DecodeHamming(string Data)
 {
     string hstr = "101010101100110001111";
@@ -260,7 +296,11 @@ int* DecodeHamming(string Data)
     int* to_ret = Kp.list();
 
     if (x != 0)
+    {
+        cout << "Blad w pakiecie" << endl;
         NEG(to_ret, x - 1);
+
+    }
 
     //cout << endl << "Naprawiony Kod" << endl;
     /*for (int i = 0; i < 7; i++)
@@ -270,10 +310,10 @@ int* DecodeHamming(string Data)
     return to_ret;
 }
 
+
+//Kodowanie Hamminga dla podanego napisu
 HammingData EncodeHamming(string data)
 {
-
-
     string* binarystring = new string[data.length()];
 
     cout << "Znaki zamienione na asci" << endl;
@@ -334,6 +374,8 @@ HammingData EncodeHamming(string data)
     return to_ret;
 }
 
+
+//Rozwiniecie do pojedynczego stringa
 string Unroll(string* data, int size)
 {
     string to_ret;
@@ -344,6 +386,8 @@ string Unroll(string* data, int size)
     return to_ret;
 }
 
+
+//Generowanie ciagu binarnego
 Data generateSignal(string bite, int Sample_freq, double Td)
 {
     int bite_length = Td * Sample_freq;
@@ -380,6 +424,8 @@ Data generateSignal(string bite, int Sample_freq, double Td)
     return data;
 }
 
+
+//Kluczowanie ASK
 double ASK(double x, double y,int N,double Td)
 {
     int A1 = 3;
@@ -393,6 +439,8 @@ double ASK(double x, double y,int N,double Td)
         return  -101;
 }
 
+
+//Kluczowanie FSK
 double FSK(double x, double y,int N, double Td)
 {
     int A = 3;
@@ -406,6 +454,8 @@ double FSK(double x, double y,int N, double Td)
         return  -101;
 }
 
+
+//Kluczowanie PSK
 double PSK(double x, double y, int N, double Td)
 {
     int A = 3;
@@ -418,6 +468,8 @@ double PSK(double x, double y, int N, double Td)
         return  -101;
 }
 
+
+//Calkowanie numeryczne metoda trapezow
 double calka(double* funkcja, int poczatek, int koniec, double h)
 {
     double suma = 0;
@@ -429,6 +481,8 @@ double calka(double* funkcja, int poczatek, int koniec, double h)
     return h * suma;
 }
 
+
+//Wszystkie tablice funkcji kluczjacych
 struct Signals
 {
     int len;
@@ -439,6 +493,8 @@ struct Signals
     double* x;
 };
 
+
+//Funkcja kluczjaca po wszystkich metodach
 Signals SendSignal(Data Signal, double Td, int N)
 {
     int len = Signal.length;
@@ -455,12 +511,7 @@ Signals SendSignal(Data Signal, double Td, int N)
         zA[i] = ASK(x[i], y[i], N, Td);
         zF[i] = FSK(x[i], y[i], N, Td);
         zP[i] = PSK(x[i], y[i], N, Td);
-    }
-
-    GenerateData(x, y, len, "Inf");
-    GenerateData(x, zA, len, "ZA");
-    GenerateData(x, zF, len, "ZF");
-    GenerateData(x, zP, len, "ZP");
+    }    
 
     Signals to_ret;
 
@@ -495,11 +546,43 @@ int main()
 
     double* zA = Recived.zA;
     double* zF = Recived.zF;
-    double* zP = Recived.zP;
+    double* zP = Recived.zP;    
 
     int bitelen = Signal.bite;
 
     int len = Signal.length;
+
+
+
+    /* Generate a new random seed from system time - do this once in your constructor */
+    srand(time(0));
+
+    /* Setup constants */
+    const static int q = 15;
+    const static float c1 = (1 << q) - 1;
+    const static float c2 = ((int)(c1 / 3)) + 1;
+    const static float c3 = 1.f / c1;
+
+    /* random number in range 0 - 1 not including 1 */
+    float random = 0.f;
+
+    /* the white noise */
+    float noise = 0.f;
+
+    for (int i = 0; i < len; i++)
+    {
+        random = ((float)rand() / (float)(RAND_MAX + 1));
+        noise = (2.f * ((random * c2) + (random * c2) + (random * c2)) - 3.f * (c2 - 1.f)) * (c3*1);        
+        zA[i] += noise;
+        zF[i] += noise;
+        zP[i] += noise;
+    }
+
+    GenerateData(x, y, len, "Inf");
+    GenerateData(x, zA, len, "ZA");
+    GenerateData(x, zF, len, "ZF");
+    GenerateData(x, zP, len, "ZP");
+
 
     int dlogoscnapisu = Hamm.PacketsAmmount * 7;
 
@@ -627,16 +710,18 @@ int main()
     }
 
     cout << "Odebrane dane kluczowania ASK" << endl << recived_fA << endl;
-    cout << "Odebrane dane kluczowani FSK" << endl << recived_fF << endl;
-    cout << "Odebrane dane kluczowani PSK" << endl << recived_fP << endl;
+    cout << "Odebrane dane kluczowania FSK" << endl << recived_fF << endl;
+    cout << "Odebrane dane kluczowania PSK" << endl << recived_fP << endl;
 
     int packets = recived_fA.length() / 7;
 
     string* reshapePackets = new string [packets];
 
+
+    //TUTAJ wybór 
     for (int i = 0; i < recived_fA.length(); i++)
     {       
-        reshapePackets[i / 7] += recived_fA[i];
+        reshapePackets[i / 7] += recived_fP[i];
     }
 
 
